@@ -1,0 +1,37 @@
+# ########## 공통 ##########
+# 운영체제 파일
+.DS_Store
+Thumbs.db
+
+# IDE 설정 (VSCode, IntelliJ)
+.vscode/
+.idea/
+*.iml
+
+# ########## 백엔드 (Java/Gradle) ##########
+# 빌드 결과물
+backend/build/
+backend/target/
+backend/out/
+
+# Gradle 캐시
+backend/.gradle/
+
+# ########## 프론트엔드 (Node.js) ##########
+# 의존성 폴더 (절대 올리면 안 됨)
+frontend/node_modules/
+
+# 빌드 결과물
+frontend/build/
+frontend/dist/
+
+# 로그 파일
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# ########## 민감한 환경변수 ##########
+# .env 파일 및 유사 파일
+.env
+.env.*
+!.env.example

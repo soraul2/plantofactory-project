@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  
+  db:
+    image: mariadb:10.11
+    container_name: plantofactory-db
+    ports:
+      - "3306:3306"
+    environment:
+      # .env 파일에서 변수를 읽어옴
+      MARIADB_DATABASE: '${DB_DATABASE}'
+      MARIADB_USER: '${DB_USER}'
+      MARIADB_PASSWORD: '${DB_PASSWORD}'
+      MARIADB_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    container_name: plantofactory-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      # .env 파일에서 변수를 읽어옴
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/${DB_DATABASE}
+      - SPRING_DATASOURCE_USERNAME=${DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    networks:
+      - app-network
+  
+  # 3. 프론트엔드 서비스 (React + Nginx)
+  frontend:
+    build: ./frontend # ./frontend 폴더의 Dockerfile로 빌드
+    container_name: plantofactory-frontend
+    ports:
+      - "3000:80" # 호스트 3000 포트와 컨테이너 80 포트(Nginx) 연결
+    depends_on:
+      - backend # 'backend' 서비스가 먼저 시작된 후에 실행
+    networks:
+      - app-network
+
+# 서비스들이 공통으로 사용할 네트워크 정의
+networks:
+  app-network:
+    driver: bridge
+
+# 데이터베이스 데이터를 영속적으로 저장하기 위한 볼륨 정의
+volumes:
+  db-data:

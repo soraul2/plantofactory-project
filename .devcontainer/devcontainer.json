@@ -1,0 +1,38 @@
+{
+  "name": "PlantoFactory Dev Environment",
+  // 1. 위에서 만든 Dockerfile을 사용해 빌드
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  
+  // 2. 컨테이너 내부의 작업 폴더
+  "workspaceFolder": "/workspace",
+
+  // 3. 로컬 PC의 프로젝트 폴더 <-> 컨테이너의 /workspace 폴더 연결
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
+
+  // 4. 컨테이너가 시작된 후 실행할 명령어 (예: frontend 자동 설치)
+  "postCreateCommand": "cd frontend && npm install",
+
+  // 5. VS Code에 자동으로 설치할 확장 프로그램 (매우 유용!)
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",         // Java 필수팩
+        "vscjava.vscode-spring-boot-pack",  // Spring Boot 필수팩
+        "ms-azuretools.vscode-docker",      // Docker
+        "dbaeumer.vscode-eslint",           // React (ESLint)
+        "esbenp.prettier-vscode"            // React (Prettier)
+      ]
+    }
+  },
+
+  // 6. 컨테이너가 종료된 후에도 계속 실행되도록 설정
+  "overrideCommand": false,
+  "shutdownAction": "stopContainer",
+
+  // 7. 'node' 유저로 VS Code 실행
+  "remoteUser": "node"
+}
