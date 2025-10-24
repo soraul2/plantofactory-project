@@ -1,55 +1,57 @@
 version: '3.8'
 
 services:
-  
-  db:
-    image: mariadb:10.11
-    container_name: plantofactory-db
+  # 백엔드 서비스 (Spring Boot)
+  backend:
+    # build 경로를 새 폴더 주소로 변경합니다.
+    build: ./backend
     ports:
-      - "3306:3306"
+      - "8080:8080"
     environment:
-      # .env 파일에서 변수를 읽어옴
-      MARIADB_DATABASE: '${DB_DATABASE}'
-      MARIADB_USER: '${DB_USER}'
-      MARIADB_PASSWORD: '${DB_PASSWORD}'
-      MARIADB_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
+      # application.properties의 기본값을 아래 값들로 덮어씁니다.
+      - spring.datasource.url=${DB_URL}
+      - spring.datasource.username=${DB_USER}
+      - spring.datasource.password=${DB_PASS}
+      - TZ=Asia/Seoul
+      - spring.jpa.properties.hibernate.jdbc.time_zone=Asia/Seoul 
+      # 👆 이 두 설정이 컨테이너와 Spring/JPA 시간을 KST로 맞춥니다.
+    volumes:
+    # [추가] 프로젝트 루트의 .env 파일을 컨테이너 내부의 /app/.env 경로에 주입합니다.
+      - ./.env:/app/.env
+    depends_on:
+      - db
+    networks:
+      - plantofactory-net
+
+  # 프론트엔드 서비스 (React)
+  frontend:
+    # build 경로를 새 폴더 주소로 변경합니다.
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - plantofactory-net
+
+  db:
+    image: mariadb:10.6
+    environment:
+      - MARIADB_DATABASE=mydatabase
+      - MARIADB_USER=myuser
+      - MARIADB_PASSWORD=mypassword
+      - MARIADB_ROOT_PASSWORD=rootpassword
     volumes:
       - db-data:/var/lib/mysql
     networks:
-      - app-network
+      - plantofactory-net
 
-  backend:
-    build: ./backend
-    container_name: plantofactory-backend
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-    environment:
-      # .env 파일에서 변수를 읽어옴
-      - SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/${DB_DATABASE}
-      - SPRING_DATASOURCE_USERNAME=${DB_USER}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-    networks:
-      - app-network
-  
-  # 3. 프론트엔드 서비스 (React + Nginx)
-  frontend:
-    build: ./frontend # ./frontend 폴더의 Dockerfile로 빌드
-    container_name: plantofactory-frontend
-    ports:
-      - "3000:80" # 호스트 3000 포트와 컨테이너 80 포트(Nginx) 연결
-    depends_on:
-      - backend # 'backend' 서비스가 먼저 시작된 후에 실행
-    networks:
-      - app-network
+  # ----------------------------------
+  # 👇 파일의 최하단에 'volumes' 섹션을 추가합니다.
+volumes: 
+  db-data: 
 
-# 서비스들이 공통으로 사용할 네트워크 정의
 networks:
-  app-network:
+  plantofactory-net:
     driver: bridge
-
-# 데이터베이스 데이터를 영속적으로 저장하기 위한 볼륨 정의
-volumes:
-  db-data:
+ 

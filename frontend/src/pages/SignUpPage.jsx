@@ -140,7 +140,7 @@ export default function SignUp(props) {
       console.log('회원가입 성공 : ' , response.data);
 
       //6. 성공 시 로그인 페이지로 이동
-      navigate('/signin');
+      navigate('/SignInPage');
       
     }catch(err){
       //7. 실패 시 (예 : 이메일 중복 ) 에러 메시지 설정

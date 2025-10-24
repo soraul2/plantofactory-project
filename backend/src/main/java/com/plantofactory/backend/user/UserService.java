@@ -25,8 +25,8 @@ public class UserService {
         //3. DTO를 Entity로 변환 (암호화된 비밀번호 사용)
         User newUser = new User(
             requestDto.getName(),
-            requestDto.getEmail(),
-            encodedPassword
+            encodedPassword,
+            requestDto.getEmail()
         );
 
         return userRepository.save(newUser);
