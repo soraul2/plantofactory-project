@@ -25,8 +25,11 @@ repositories {
 }
 
 dependencies {
+	//1. 데이터베이스를 효율적으로 저장하기 위한 jpa 라이브러리
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	//2. 백엔드 서버에서 보안을 적용하기 위한 스프링 시큐리티 라이브러리 , 사용하기 쉬운 장점이 있음.
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 	annotationProcessor 'org.projectlombok:lombok'
