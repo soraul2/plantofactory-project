@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
+import { useNavigate } from 'react-router-dom';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -17,6 +18,7 @@ import ForgotPassword from './components/ForgotPassword';
 import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from './components/CustomIcons';
+import axiosInstance from '../api/axiosInstance';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -61,11 +63,15 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignIn(props) {
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
+  const [error, setError] = React.useState(''); // 로그인 실패 시 에러 메시지 상태
   const [open, setOpen] = React.useState(false);
+  const navigate = useNavigate(); // 페이지 이동을 위한 navigate 함수
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -75,25 +81,15 @@ export default function SignIn(props) {
     setOpen(false);
   };
 
-  const handleSubmit = (event) => {
-    if (emailError || passwordError) {
-      event.preventDefault();
-      return;
-    }
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
-  };
-
-  const validateInputs = () => {
-    const email = document.getElementById('email');
-    const password = document.getElementById('password');
-
+  // 폼 제출 시 실행되는 함수
+  const handleSubmit = async (event) => {
+    // 폼 기본 동작(페이지 새로고침) 방지
+    event.preventDefault();
+    setError(''); // 이전 에러 메시지 초기화
+    
+    // 입력값 유효성 검사
     let isValid = true;
-
-    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setEmailError(true);
       setEmailErrorMessage('Please enter a valid email address.');
       isValid = false;
@@ -101,8 +97,7 @@ export default function SignIn(props) {
       setEmailError(false);
       setEmailErrorMessage('');
     }
-
-    if (!password.value || password.value.length < 6) {
+    if (!password || password.length < 6) {
       setPasswordError(true);
       setPasswordErrorMessage('Password must be at least 6 characters long.');
       isValid = false;
@@ -110,8 +105,33 @@ export default function SignIn(props) {
       setPasswordError(false);
       setPasswordErrorMessage('');
     }
+    
+    // 유효성 검사를 통과하지 못하면 함수 종료
+    if (!isValid) {
+      return;
+    }
 
-    return isValid;
+    try {
+      // 1. POST 요청: Spring Boot의 로그인 API로 데이터 전송
+      // `await`를 사용하기 위해 함수를 `async`로 선언해야 합니다.
+      const response = await axiosInstance.post('/api/auth/signin', {
+        email: email,
+        password: password,
+      });
+
+      // 2. [핵심] 토큰 저장: 응답(response)으로 받은 JWT 토큰을 localStorage에 저장
+      // (백엔드에서 { "accessToken": "jwt-token-string" } 형태로 반환한다고 가정)
+      const { accessToken } = response.data;
+      localStorage.setItem('accessToken', accessToken);
+
+      // 3. 페이지 이동: 대시보드 페이지로 이동
+      navigate('/dashboard');
+
+    } catch (err) {
+      console.error('로그인 실패', err);
+      // 서버에서 오는 에러 메시지를 표시하거나, 일반적인 에러 메시지를 표시
+      setError(err.response?.data?.message || '이메일 또는 비밀번호가 올바르지 않습니다.');
+    }
   };
 
   return (
@@ -139,6 +159,10 @@ export default function SignIn(props) {
               gap: 2,
             }}
           >
+            {/* 로그인 실패 시 에러 메시지 표시 */}
+            {error && (
+              <Typography color="error" sx={{ textAlign: 'center' }}>{error}</Typography>
+            )}
             <FormControl>
               <FormLabel htmlFor="email">Email</FormLabel>
               <TextField
@@ -154,6 +178,7 @@ export default function SignIn(props) {
                 fullWidth
                 variant="outlined"
                 color={emailError ? 'error' : 'primary'}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </FormControl>
             <FormControl>
@@ -171,6 +196,7 @@ export default function SignIn(props) {
                 fullWidth
                 variant="outlined"
                 color={passwordError ? 'error' : 'primary'}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </FormControl>
             <FormControlLabel
@@ -182,7 +208,6 @@ export default function SignIn(props) {
               type="submit"
               fullWidth
               variant="contained"
-              onClick={validateInputs}
             >
               로그인
             </Button>
