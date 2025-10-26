@@ -114,10 +114,10 @@ export default function SignUp(props) {
       setEmailErrorMessage('');
     }
 
-    if(!password || password.length < 6){
+    if(!password || password.length < 7){
       setPasswordError(true);
       setPasswordErrorMessage('비밀번호를 7자 이상으로 입력시켜주세요.');
-      isValid(false);
+      isValid = false;
     }else{
       setPasswordError(false);
       setPasswordErrorMessage('');
@@ -198,7 +198,7 @@ export default function SignUp(props) {
                 variant="outlined"
                 error={emailError}
                 helperText={emailErrorMessage}
-                color={passwordError ? 'error' : 'primary'}
+                color={emailError ? 'error' : 'primary'}
                 value = {email}
                 onChange ={(e) => setEmail(e.target.value)}
               />
